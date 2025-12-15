@@ -4,6 +4,8 @@ Quick board position preview tool from clipboard for shogi (SFEN) and chess (FEN
 
 Supports standard shogi (9x9), minishogi (5x5), and chess (8x8).
 
+![Shogi](screenshots/sfen.png) ![Chess](screenshots/fen.png)
+
 ## Usage
 
 1. Copy a SFEN or FEN string to your clipboard
