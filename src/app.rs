@@ -7,12 +7,13 @@ use eframe::egui::{self, Color32, ColorImage, Pos2, TextureHandle};
 
 use crate::board::{coord_margin, draw_checkerboard, draw_coordinates, draw_grid, draw_hoshi_points};
 use crate::config::Config;
-use crate::pieces::draw_pieces;
-use crate::sfen::{detect_board_size, is_chess, parse_sfen, Piece};
+use crate::pieces::{draw_hand, draw_pieces};
+use crate::sfen::{detect_board_size, is_chess, parse_hand, parse_sfen, Hand, Piece};
 
 /// Main application state
 pub struct SfenApp {
     board: Vec<Vec<Option<Piece>>>,
+    hand: Hand,
     board_size: usize,
     textures: HashMap<String, TextureHandle>,
     assets_path: PathBuf,
@@ -32,6 +33,7 @@ impl SfenApp {
     pub fn new(sfen: String, assets_path: PathBuf, config: Config) -> Self {
         let board_size = detect_board_size(&sfen);
         let board = parse_sfen(&sfen, board_size);
+        let hand = parse_hand(&sfen);
         let is_chess_board = is_chess(board_size);
 
         let (background_color, grid_color, text_color) = if is_chess_board {
@@ -53,6 +55,7 @@ impl SfenApp {
 
         Self {
             board,
+            hand,
             board_size,
             textures: HashMap::new(),
             assets_path,
@@ -125,15 +128,32 @@ impl eframe::App for SfenApp {
 
         egui::CentralPanel::default().frame(frame).show(ctx, |ui| {
             let available = ui.available_size();
-            let total_size = available.x.min(available.y);
-            let coord_space = total_size * coord_margin(self.board_size);
-            let board_pixels = total_size - coord_space * 2.0;
+
+            // Check if we need hand space (shogi only, when there are pieces in hand)
+            let has_hand = !self.is_chess && (!self.hand.sente.is_empty() || !self.hand.gote.is_empty());
+            let hand_width_ratio = if has_hand { 0.12 } else { 0.0 };
+
+            // Use width for layout when hands are shown (window is wider than tall)
+            let total_size = if has_hand { available.x } else { available.x.min(available.y) };
+            let hand_width = total_size * hand_width_ratio;
+            let board_area = total_size - hand_width * 2.0;
+            let coord_space = board_area * coord_margin(self.board_size);
+            let board_pixels = board_area - coord_space * 2.0;
             let cell_size = board_pixels / self.board_size as f32;
 
-            // Center the board, coordinates go in the space around it
+            // Center everything: hand + coords + board + coords + hand = total_size
+            let left_margin = (available.x - total_size) / 2.0;
+
+            // Board offset: left_margin + hand_width + coord_space
+            // Reduced vertical margin when hands are shown
+            let vertical_margin = if has_hand {
+                coord_space * 1.2
+            } else {
+                (available.y - board_pixels) / 2.0
+            };
             let offset = Pos2::new(
-                (available.x - board_pixels) / 2.0,
-                (available.y - board_pixels) / 2.0,
+                left_margin + hand_width + coord_space,
+                vertical_margin,
             );
 
             let painter = ui.painter();
@@ -176,6 +196,48 @@ impl eframe::App for SfenApp {
                 self.text_color,
                 self.board_size,
             );
+
+            // Draw pieces in hand (shogi only)
+            if has_hand {
+                let hand_cell_size = cell_size * 0.9;
+
+                // Gote's hand - upper left (within left hand_width area)
+                if !self.hand.gote.is_empty() {
+                    let gote_hand_pos = Pos2::new(
+                        left_margin + (hand_width - hand_cell_size) / 2.0,
+                        offset.y,
+                    );
+                    draw_hand(
+                        painter,
+                        gote_hand_pos,
+                        hand_cell_size,
+                        &self.hand.gote,
+                        &self.textures,
+                        self.text_color,
+                        self.grid_color,
+                        true,
+                    );
+                }
+
+                // Sente's hand - lower right (within right hand_width area)
+                if !self.hand.sente.is_empty() {
+                    let sente_hand_count = self.hand.sente.len();
+                    let sente_hand_pos = Pos2::new(
+                        left_margin + hand_width + coord_space + board_pixels + coord_space + (hand_width - hand_cell_size) / 2.0,
+                        offset.y + board_pixels - (sente_hand_count as f32 * hand_cell_size),
+                    );
+                    draw_hand(
+                        painter,
+                        sente_hand_pos,
+                        hand_cell_size,
+                        &self.hand.sente,
+                        &self.textures,
+                        self.text_color,
+                        self.grid_color,
+                        false,
+                    );
+                }
+            }
         });
     }
 }

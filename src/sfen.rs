@@ -74,6 +74,46 @@ pub struct Piece {
     pub sfen_key: String,
 }
 
+/// Pieces in hand for both players
+#[derive(Clone, Default)]
+pub struct Hand {
+    /// Sente (black) pieces in hand - uppercase SFEN keys with counts
+    pub sente: Vec<(String, u32)>,
+    /// Gote (white) pieces in hand - lowercase SFEN keys with counts
+    pub gote: Vec<(String, u32)>,
+}
+
+/// Parse pieces in hand from SFEN string (third field)
+pub fn parse_hand(sfen: &str) -> Hand {
+    let parts: Vec<&str> = sfen.split_whitespace().collect();
+    let hand_str = parts.get(2).unwrap_or(&"-");
+
+    if *hand_str == "-" {
+        return Hand::default();
+    }
+
+    let mut sente = Vec::new();
+    let mut gote = Vec::new();
+    let mut count: u32 = 0;
+
+    for ch in hand_str.chars() {
+        if ch.is_ascii_digit() {
+            count = count * 10 + ch.to_digit(10).unwrap();
+        } else if ch.is_alphabetic() {
+            let piece_count = if count == 0 { 1 } else { count };
+            let key = ch.to_string();
+            if ch.is_uppercase() {
+                sente.push((key, piece_count));
+            } else {
+                gote.push((key, piece_count));
+            }
+            count = 0;
+        }
+    }
+
+    Hand { sente, gote }
+}
+
 /// Parse SFEN board position into a 2D vector
 pub fn parse_sfen(sfen: &str, board_size: usize) -> Vec<Vec<Option<Piece>>> {
     let mut board = vec![vec![None; board_size]; board_size];

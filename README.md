@@ -15,6 +15,8 @@ Supports standard shogi (9x9), minishogi (5x5), and chess (8x8).
 
 Without a config file, shogi pieces are rendered using an included TTF font (gote pieces displayed upside down), and chess pieces use Unicode symbols with a checkerboard pattern.
 
+Pieces in hand are displayed in trays on either side of the board when present in the SFEN string.
+
 ## Configuration (optional)
 
 Create a JSON config file to customize the display. The config has separate sections for shogi and chess.
