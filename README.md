@@ -103,4 +103,6 @@ cargo build --release
 
 ## License
 
-MIT
+Code is licensed under [MIT](LICENSE).
+
+The included YujiMai font is licensed under the [SIL Open Font License](resources/YujiMai.License.txt).
