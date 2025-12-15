@@ -1,14 +1,26 @@
 //! Board rendering
 
-use eframe::egui::{self, Align2, Color32, FontId, Pos2, Stroke};
+use eframe::egui::{self, Align2, Color32, FontId, Pos2, Rect, Stroke, Vec2};
 
-use crate::sfen::STANDARD_SHOGI_SIZE;
+use crate::sfen::{CHESS_SIZE, STANDARD_SHOGI_SIZE};
 
-pub const COORD_MARGIN: f32 = 0.05;
+const COORD_MARGIN_STANDARD: f32 = 0.05;
+const COORD_MARGIN_OTHER: f32 = 0.10;
+const TEXT_OFFSET: f32 = 0.08;
 
 const KANJI_NUMERALS: [&str; 9] = ["一", "二", "三", "四", "五", "六", "七", "八", "九"];
+const CHESS_FILES: [&str; 8] = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
-/// Draw the board grid lines
+/// Get coordinate margin based on board size
+pub fn coord_margin(board_size: usize) -> f32 {
+    if board_size == STANDARD_SHOGI_SIZE {
+        COORD_MARGIN_STANDARD
+    } else {
+        COORD_MARGIN_OTHER
+    }
+}
+
+/// Draw the board grid lines (for shogi)
 pub fn draw_grid(
     painter: &egui::Painter,
     offset: Pos2,
@@ -31,7 +43,29 @@ pub fn draw_grid(
     }
 }
 
-/// Draw board coordinates (files as numbers, ranks as kanji)
+/// Draw a checkerboard pattern (for chess)
+pub fn draw_checkerboard(
+    painter: &egui::Painter,
+    offset: Pos2,
+    cell_size: f32,
+    board_size: usize,
+    light_color: Color32,
+    dark_color: Color32,
+) {
+    for row in 0..board_size {
+        for col in 0..board_size {
+            let is_light = (row + col) % 2 == 0;
+            let color = if is_light { light_color } else { dark_color };
+            let rect = Rect::from_min_size(
+                Pos2::new(offset.x + col as f32 * cell_size, offset.y + row as f32 * cell_size),
+                Vec2::splat(cell_size),
+            );
+            painter.rect_filled(rect, 0.0, color);
+        }
+    }
+}
+
+/// Draw board coordinates
 pub fn draw_coordinates(
     painter: &egui::Painter,
     offset: Pos2,
@@ -42,33 +76,58 @@ pub fn draw_coordinates(
 ) {
     let font_size = cell_size * 0.35;
     let font = FontId::proportional(font_size);
-    let margin = cell_size * COORD_MARGIN;
+    let margin = cell_size * TEXT_OFFSET;
 
-    // Files (columns) - numbered right to left
-    for col in 0..board_size {
-        let file_num = board_size - col;
-        let x = offset.x + (col as f32 + 0.5) * cell_size;
-        let y = offset.y - margin;
-        painter.text(
-            Pos2::new(x, y),
-            Align2::CENTER_BOTTOM,
-            file_num.to_string(),
-            font.clone(),
-            color,
-        );
-    }
-
-    // Ranks (rows) - kanji numerals
-    for (row, kanji) in KANJI_NUMERALS.iter().enumerate().take(board_size) {
-        let x = offset.x + board_pixels + margin;
-        let y = offset.y + (row as f32 + 0.5) * cell_size;
-        painter.text(
-            Pos2::new(x, y),
-            Align2::LEFT_CENTER,
-            *kanji,
-            font.clone(),
-            color,
-        );
+    if board_size == CHESS_SIZE {
+        // Chess: files a-h (left to right), ranks 8-1 (top to bottom)
+        for (col, file) in CHESS_FILES.iter().enumerate() {
+            let x = offset.x + (col as f32 + 0.5) * cell_size;
+            let y = offset.y + board_pixels + margin;
+            painter.text(
+                Pos2::new(x, y),
+                Align2::CENTER_TOP,
+                *file,
+                font.clone(),
+                color,
+            );
+        }
+        for row in 0..board_size {
+            let rank = board_size - row;
+            let x = offset.x - margin;
+            let y = offset.y + (row as f32 + 0.5) * cell_size;
+            painter.text(
+                Pos2::new(x, y),
+                Align2::RIGHT_CENTER,
+                rank.to_string(),
+                font.clone(),
+                color,
+            );
+        }
+    } else {
+        // Shogi: files numbered right to left, ranks as kanji
+        for col in 0..board_size {
+            let file_num = board_size - col;
+            let x = offset.x + (col as f32 + 0.5) * cell_size;
+            let y = offset.y - margin;
+            painter.text(
+                Pos2::new(x, y),
+                Align2::CENTER_BOTTOM,
+                file_num.to_string(),
+                font.clone(),
+                color,
+            );
+        }
+        for (row, kanji) in KANJI_NUMERALS.iter().enumerate().take(board_size) {
+            let x = offset.x + board_pixels + margin;
+            let y = offset.y + (row as f32 + 0.5) * cell_size;
+            painter.text(
+                Pos2::new(x, y),
+                Align2::LEFT_CENTER,
+                *kanji,
+                font.clone(),
+                color,
+            );
+        }
     }
 }
 

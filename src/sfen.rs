@@ -1,9 +1,10 @@
-//! SFEN parsing and piece representation
+//! Board notation parsing and piece representation
 
 pub const STANDARD_SHOGI_SIZE: usize = 9;
+pub const CHESS_SIZE: usize = 8;
 pub const MINISHOGI_SIZE: usize = 5;
 
-/// Convert SFEN piece character to kanji representation
+/// Convert SFEN piece character to kanji representation (for shogi)
 pub fn sfen_to_kanji(sfen_key: &str) -> &'static str {
     match sfen_key {
         "K" | "k" => "王",
@@ -26,20 +27,44 @@ pub fn sfen_to_kanji(sfen_key: &str) -> &'static str {
     }
 }
 
-/// Check if a piece belongs to gote (lowercase = gote)
+/// Convert FEN piece character to Unicode chess symbol
+pub fn fen_to_unicode(fen_key: &str) -> &'static str {
+    match fen_key {
+        "K" => "♔",
+        "Q" => "♕",
+        "R" => "♖",
+        "B" => "♗",
+        "N" => "♘",
+        "P" => "♙",
+        "k" => "♚",
+        "q" => "♛",
+        "r" => "♜",
+        "b" => "♝",
+        "n" => "♞",
+        "p" => "♟",
+        _ => "?",
+    }
+}
+
+/// Check if a piece belongs to gote/black (lowercase)
 pub fn is_gote(sfen_key: &str) -> bool {
     let ch = sfen_key.chars().last().unwrap_or(' ');
     ch.is_lowercase()
 }
 
-/// Detect board size from SFEN string
+/// Check if board size is chess
+pub fn is_chess(board_size: usize) -> bool {
+    board_size == CHESS_SIZE
+}
+
+/// Detect board size from SFEN/FEN string
 pub fn detect_board_size(sfen: &str) -> usize {
     let board_part = sfen.split_whitespace().next().unwrap_or(sfen);
     let row_count = board_part.split('/').count();
-    if row_count == MINISHOGI_SIZE {
-        MINISHOGI_SIZE
-    } else {
-        STANDARD_SHOGI_SIZE
+    match row_count {
+        MINISHOGI_SIZE => MINISHOGI_SIZE,
+        CHESS_SIZE => CHESS_SIZE,
+        _ => STANDARD_SHOGI_SIZE,
     }
 }
 

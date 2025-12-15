@@ -15,7 +15,7 @@ use eframe::egui;
 use app::SfenApp;
 use config::{load_config, Config};
 use fonts::setup_fonts;
-use sfen::{detect_board_size, MINISHOGI_SIZE};
+use sfen::{detect_board_size, CHESS_SIZE, MINISHOGI_SIZE};
 
 fn main() -> eframe::Result<()> {
     let args: Vec<String> = std::env::args().collect();
@@ -33,10 +33,10 @@ fn main() -> eframe::Result<()> {
 
     let sfen = read_sfen_from_clipboard();
     let board_size = detect_board_size(&sfen);
-    let base_size = if board_size == MINISHOGI_SIZE {
-        500.0
-    } else {
-        900.0
+    let base_size = match board_size {
+        MINISHOGI_SIZE => 500.0,
+        CHESS_SIZE => 700.0,
+        _ => 900.0, // Standard shogi
     };
     let window_size = base_size * config.scale_factor();
 
