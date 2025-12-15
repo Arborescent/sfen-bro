@@ -1,16 +1,13 @@
 # sfen-bro
 
-SFEN clipboard viewer for shogi positions. Reads SFEN from clipboard and displays the board with piece textures.
-
-Supports standard shogi (9x9) and minishogi (5x5).
+Quick preview tool for SFEN shogi positions. Supports standard shogi (9x9) and minishogi (5x5).
 
 ## Usage
 
-```bash
-sfen-bro [path-to-config.json]
-```
-
-Copy an SFEN string to your clipboard, then run the command. A borderless window will open displaying the board. Dismiss it by pressing Escape or clicking outside the window (losing focus).
+1. Copy an SFEN string to your clipboard
+2. Run `sfen-bro [path-to-config.json]`
+3. A borderless window opens displaying the board
+4. Dismiss with Escape or by clicking outside the window (losing focus)
 
 Without a config file, pieces are rendered using kanji characters. Gote pieces are displayed upside down.
 
@@ -22,6 +19,7 @@ Create a JSON config file to customize the display. Place the config file in the
 {
   "background": "#F0D9B5",
   "scale": 1.0,
+  "assets_path": "images/pieces",
   "pieces": {
     "K": "sente_king.png",
     "k": "gote_king.png",
@@ -60,8 +58,11 @@ Create a JSON config file to customize the display. Place the config file in the
 | Option | Description | Default |
 |--------|-------------|---------|
 | `background` | Board background color in HTML notation (#RGB, #RRGGBB, or #RRGGBBAA) | `#F0D9B5` |
+| `grid_color` | Grid line color in HTML notation | `#000000` |
+| `text_color` | Text color for coordinates and kanji pieces | `#000000` |
 | `scale` | Window size multiplier | `1.0` |
-| `pieces` | Map of SFEN characters to texture filenames | (none, uses kanji) |
+| `assets_path` | Base path for piece images (relative to config file or absolute) | config file directory |
+| `pieces` | Map of SFEN characters to image paths (relative to assets_path or absolute) | (none, uses kanji) |
 
 ### SFEN piece characters
 

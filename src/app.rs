@@ -18,6 +18,8 @@ pub struct SfenApp {
     assets_path: PathBuf,
     config: Config,
     background_color: Color32,
+    grid_color: Color32,
+    text_color: Color32,
     textures_loaded: bool,
     frame_count: u32,
 }
@@ -28,6 +30,8 @@ impl SfenApp {
         let board_size = detect_board_size(&sfen);
         let board = parse_sfen(&sfen, board_size);
         let background_color = config.background_color();
+        let grid_color = config.grid_color();
+        let text_color = config.text_color();
         Self {
             board,
             board_size,
@@ -35,6 +39,8 @@ impl SfenApp {
             assets_path,
             config,
             background_color,
+            grid_color,
+            text_color,
             textures_loaded: false,
             frame_count: 0,
         }
@@ -46,14 +52,32 @@ impl SfenApp {
             return;
         }
 
-        for (sfen_key, filename) in &self.config.pieces {
-            let path = self.assets_path.join(filename);
+        // Determine base path for piece images
+        let base_path = if let Some(ref assets) = self.config.assets_path {
+            let assets_path = PathBuf::from(assets);
+            if assets_path.is_absolute() {
+                assets_path
+            } else {
+                self.assets_path.join(assets_path)
+            }
+        } else {
+            self.assets_path.clone()
+        };
+
+        for (sfen_key, piece_path) in &self.config.pieces {
+            let piece_path = PathBuf::from(piece_path);
+            let path = if piece_path.is_absolute() {
+                piece_path
+            } else {
+                base_path.join(piece_path)
+            };
+
             if let Ok(img) = image::open(&path) {
                 let rgba = img.to_rgba8();
                 let size = [rgba.width() as usize, rgba.height() as usize];
                 let pixels = rgba.into_raw();
                 let color_image = ColorImage::from_rgba_unmultiplied(size, &pixels);
-                let texture = ctx.load_texture(filename, color_image, Default::default());
+                let texture = ctx.load_texture(sfen_key, color_image, Default::default());
                 self.textures.insert(sfen_key.clone(), texture);
             }
         }
@@ -91,10 +115,10 @@ impl eframe::App for SfenApp {
 
             let painter = ui.painter();
 
-            draw_grid(painter, offset, board_pixels, cell_size, self.board_size);
-            draw_coordinates(painter, offset, board_pixels, cell_size, self.board_size);
-            draw_hoshi_points(painter, offset, cell_size, self.board_size);
-            draw_pieces(painter, offset, cell_size, &self.board, &self.textures);
+            draw_grid(painter, offset, board_pixels, cell_size, self.board_size, self.grid_color);
+            draw_coordinates(painter, offset, board_pixels, cell_size, self.board_size, self.text_color);
+            draw_hoshi_points(painter, offset, cell_size, self.board_size, self.grid_color);
+            draw_pieces(painter, offset, cell_size, &self.board, &self.textures, self.text_color);
         });
     }
 }

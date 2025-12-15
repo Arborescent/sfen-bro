@@ -9,13 +9,25 @@ use std::path::PathBuf;
 /// Application configuration
 #[derive(Deserialize, Default)]
 pub struct Config {
-    /// Piece texture mappings (SFEN key -> filename)
+    /// Base path for piece images (relative to config file or absolute)
+    #[serde(default)]
+    pub assets_path: Option<String>,
+
+    /// Piece texture mappings (SFEN key -> path relative to assets_path, or absolute)
     #[serde(default)]
     pub pieces: HashMap<String, String>,
 
     /// Background color in HTML notation (e.g., "#F0D9B5")
     #[serde(default)]
     pub background: Option<String>,
+
+    /// Grid line color in HTML notation
+    #[serde(default)]
+    pub grid_color: Option<String>,
+
+    /// Text color for coordinates and kanji pieces in HTML notation
+    #[serde(default)]
+    pub text_color: Option<String>,
 
     /// Window scale multiplier (default: 1.0)
     #[serde(default)]
@@ -29,6 +41,22 @@ impl Config {
             .as_ref()
             .and_then(|s| parse_html_color(s))
             .unwrap_or(Color32::from_rgb(240, 217, 181))
+    }
+
+    /// Parse grid color from HTML notation to Color32
+    pub fn grid_color(&self) -> Color32 {
+        self.grid_color
+            .as_ref()
+            .and_then(|s| parse_html_color(s))
+            .unwrap_or(Color32::BLACK)
+    }
+
+    /// Parse text color from HTML notation to Color32
+    pub fn text_color(&self) -> Color32 {
+        self.text_color
+            .as_ref()
+            .and_then(|s| parse_html_color(s))
+            .unwrap_or(Color32::BLACK)
     }
 
     /// Get scale factor (default 1.0)

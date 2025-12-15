@@ -14,6 +14,7 @@ pub fn draw_pieces(
     cell_size: f32,
     board: &[Vec<Option<Piece>>],
     textures: &HashMap<String, TextureHandle>,
+    text_color: Color32,
 ) {
     let piece_size = cell_size;
     for (row, row_pieces) in board.iter().enumerate() {
@@ -33,7 +34,7 @@ pub fn draw_pieces(
                         Color32::WHITE,
                     );
                 } else {
-                    draw_piece_as_text(painter, center, cell_size, &piece.sfen_key);
+                    draw_piece_as_text(painter, center, cell_size, &piece.sfen_key, text_color);
                 }
             }
         }
@@ -41,13 +42,13 @@ pub fn draw_pieces(
 }
 
 /// Draw a piece using text (kanji) when no texture is available
-fn draw_piece_as_text(painter: &egui::Painter, center: Pos2, cell_size: f32, sfen_key: &str) {
+fn draw_piece_as_text(painter: &egui::Painter, center: Pos2, cell_size: f32, sfen_key: &str, color: Color32) {
     let kanji = sfen_to_kanji(sfen_key);
     let font_size = cell_size * 0.7;
     let font = FontId::new(font_size, FontFamily::Name("YujiMai".into()));
 
     let is_gote_piece = is_gote(sfen_key);
-    let galley = painter.layout_no_wrap(kanji.to_string(), font, Color32::BLACK);
+    let galley = painter.layout_no_wrap(kanji.to_string(), font, color);
     let half_size = galley.size() / 2.0;
 
     // For gote pieces, rotate 180 degrees around the center
@@ -61,9 +62,9 @@ fn draw_piece_as_text(painter: &egui::Painter, center: Pos2, cell_size: f32, sfe
     let text_shape = TextShape {
         pos: text_pos,
         galley,
-        override_text_color: Some(Color32::BLACK),
+        override_text_color: Some(color),
         underline: Stroke::NONE,
-        fallback_color: Color32::BLACK,
+        fallback_color: color,
         opacity_factor: 1.0,
         angle,
     };
