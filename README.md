@@ -1,15 +1,17 @@
 # sfen-bro
 
-Quick preview tool for SFEN shogi positions. Supports standard shogi (9x9) and minishogi (5x5).
+Quick SFEN shogi position preview tool from clipboard.
+
+Supports standard shogi (9x9) and minishogi (5x5).
 
 ## Usage
 
 1. Copy an SFEN string to your clipboard
-2. Run `sfen-bro [path-to-config.json]`
-3. A borderless window opens displaying the board
+2. Run `sfen-bro [path-to-config.json]` (you may want to bind this to a hotkey)
+3. A borderless window opens displaying the board position
 4. Dismiss with Escape or by clicking outside the window (losing focus)
 
-Without a config file, pieces are rendered using kanji characters. Gote pieces are displayed upside down.
+Without a config file, pieces are rendered using an included TTF font. Gote pieces are displayed upside down.
 
 ## Configuration (optional)
 
@@ -62,7 +64,7 @@ Create a JSON config file to customize the display. Place the config file in the
 | `text_color` | Text color for coordinates and kanji pieces | `#000000` |
 | `scale` | Window size multiplier | `1.0` |
 | `assets_path` | Base path for piece images (relative to config file or absolute) | config file directory |
-| `pieces` | Map of SFEN characters to image paths (relative to assets_path or absolute) | (none, uses kanji) |
+| `pieces` | Map of SFEN characters to image paths (relative to `assets_path` or absolute) | (none, uses kanji) |
 
 ### SFEN piece characters
 
